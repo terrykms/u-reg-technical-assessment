@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { ChangeEvent, useState } from "react";
+import { Search } from "lucide-react";
 
-function App() {
-  const [count, setCount] = useState(0)
+import RadioGroup from "./components/radio-group";
+import "./App.css";
+
+type Filter = "all" | "individuals" | "entities";
+
+const App = () => {
+  const [selectedFilter, setSelectedFilter] = useState<Filter>("all");
+  const search = (formData: FormData) => {
+    const query = formData?.get("query") as string;
+    const filter = formData?.get("filter") as Filter;
+
+    if (!query || query.trim().length === 0) {
+      alert("Search field cannot be empty!");
+    }
+    return;
+  };
+
+  const radioButtonHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    setSelectedFilter(e.currentTarget.value as Filter);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div>
+      <h1>Sanction Screening Application</h1>
+      <p>Using OpenSanctions API</p>
+      <form action={search} className="form-search">
+        <label htmlFor="query">
+          <Search width={15} height={15} />
+          <input type="text" name="query" />
+        </label>
+        <button type="submit">Search</button>
+        <RadioGroup
+          groupLabel="Filter by:"
+          selectedValue={selectedFilter}
+          onChange={radioButtonHandler}
+        />
+      </form>
+    </div>
+  );
+};
 
-export default App
+export default App;
