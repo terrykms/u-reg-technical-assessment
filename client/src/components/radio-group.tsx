@@ -31,12 +31,13 @@ const RadioGroup = ({
   onChange,
 }: Params) => {
   return (
-    <div>
+    <div className="flex gap-2 items-center">
       {groupLabel}
       {options.map(({ value, label }) => {
         return (
           <label key={value}>
             <input
+              className="mr-1"
               type="radio"
               name="filter"
               value={value}
