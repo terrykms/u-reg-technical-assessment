@@ -35,9 +35,9 @@ app.get("/search", async (req, res) => {
     if (!response.ok) {
       return res.status(response.status).json({ error: response.statusText });
     }
-    const data = await response.json();
-    const totalRecords = data.total?.value || 0;
-    const results = data.results || [];
+    const responseJson = await response.json();
+    const totalRecords = responseJson.total?.value || 0;
+    const results = responseJson.results || [];
 
     const filteredResults = results.map((result) => {
       return {
@@ -53,10 +53,11 @@ app.get("/search", async (req, res) => {
         position: result.properties.position?.[0],
       };
     });
-
     res.status(200).json({
-      totalRecords,
-      results: filteredResults,
+      data: {
+        totalRecords,
+        results: filteredResults,
+      },
     });
   } catch (error) {
     console.error(error);
