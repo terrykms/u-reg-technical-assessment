@@ -35,9 +35,24 @@ app.get("/search", async (req, res) => {
     const totalRecords = data.total?.value || 0;
     const results = data.results || [];
 
+    const filteredResults = results.map((result) => {
+      return {
+        id: result.id,
+        schema: result.schema,
+        name: result.caption,
+        country: result.properties.country?.[0],
+        birthDate: result.properties.birthDate?.[0],
+        birthPlace: result.properties.birthPlace?.[0],
+        nationality: result.properties.nationality, // array
+        address: result.properties.address?.[0], // return first address found in the result
+        jurisdiction: result.properties.jurisdiction?.[0],
+        position: result.properties.position?.[0],
+      };
+    });
+
     res.status(200).json({
       totalRecords,
-      results,
+      results: filteredResults,
     });
   } catch (error) {
     console.error(error);
