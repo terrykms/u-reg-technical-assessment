@@ -26,15 +26,13 @@ cd u-reg-technical-assessment
 **Backend (Express)**
 
 ```bash
-cd server
-npm install
+cd server && npm install
 ```
 
 **Frontend (React)**
 
 ```bash
-cd ../client
-npm install
+cd ../client && npm install
 ```
 
 ### 3. Set up Environment Variables
