@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState, useMemo } from "react";
 import { Search } from "lucide-react";
 
 import RadioGroup from "./components/radio-group";
@@ -13,16 +13,21 @@ const itemsPerPage = 10;
 const fetchLimit = 100;
 
 const App = () => {
-  const [selectedFilter, setSelectedFilter] = useState<Filter>("all");
   const [totalRecordsCount, setTotalRecordsCount] = useState<number>(-1);
   const [searchedResults, setSearchedResults] = useState<SearchData[]>([]);
-  const [displayedResults, setDisplayedResults] = useState<SearchData[]>([]);
+  // const [displayedResults, setDisplayedResults] = useState<SearchData[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState<Filter>("all");
+  const [currentFilter, setCurrentFilter] = useState<Filter>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [currentQueryText, setCurrentQueryText] = useState<string>("");
-  const [currentFilter, setCurrentFilter] = useState<Filter>("all");
-  const [hasMore, setHasMore] = useState<boolean>(true);
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+
+  const displayedResults = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const endIdx = currentPage * itemsPerPage;
+    return searchedResults.slice(startIdx, endIdx);
+  }, [currentPage, searchedResults]);
 
   const searchAction = async (formData: FormData) => {
     const query = formData?.get("query") as string;
@@ -51,11 +56,9 @@ const App = () => {
       const { totalRecords, results } = data;
       setTotalRecordsCount(totalRecords);
       setSearchedResults(results);
-      setDisplayedResults(results.slice(0, itemsPerPage));
     } catch (e: unknown) {
       setTotalRecordsCount(-1);
       setSearchedResults([]);
-      setDisplayedResults([]);
       setErrorMessage(
         e instanceof Error ? e.message : "Failed to retrieve data."
       );
@@ -69,20 +72,10 @@ const App = () => {
   };
 
   useEffect(() => {
-    if (!hasMore || isFetching || totalRecordsCount === -1) return;
+    if (isFetching || totalRecordsCount === -1) return;
 
     const offset = (currentPage - 1) * itemsPerPage;
-    if (offset <= searchedResults.length - 1) {
-      const newDisplayedResults = searchedResults.slice(
-        offset,
-        offset + itemsPerPage
-      );
-      if (newDisplayedResults.length < itemsPerPage) {
-        setHasMore(false);
-      }
-      setDisplayedResults(searchedResults.slice(offset, offset + itemsPerPage));
-      return;
-    }
+    if (offset <= searchedResults.length - 1) return;
 
     const fetchPaginatedData = async () => {
       setIsFetching(true);
@@ -98,14 +91,9 @@ const App = () => {
         const { results } = data;
         const newResults = [...searchedResults, ...results];
         setSearchedResults(newResults);
-
-        const startIdx = (currentPage - 1) * itemsPerPage;
-        const endIdx = currentPage * itemsPerPage;
-        setDisplayedResults(newResults.slice(startIdx, endIdx));
       } catch (e: unknown) {
         setTotalRecordsCount(-1);
         setSearchedResults([]);
-        setDisplayedResults([]);
         setErrorMessage(
           e instanceof Error ? e.message : "Failed to retrieve data."
         );
