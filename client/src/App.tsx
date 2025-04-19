@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState, useMemo } from "react";
+import { ChangeEvent, useEffect, useState, useMemo, useCallback } from "react";
 import { Search } from "lucide-react";
 
 import RadioGroup from "./components/radio-group";
@@ -9,13 +9,12 @@ import Pagination from "./components/pagination";
 
 type Filter = "all" | "individuals" | "entities";
 
-const itemsPerPage = 10;
-const fetchLimit = 100;
+const itemsPerPage = 10; // static
+const fetchLimit = 100; // static, fetch is run when user requests every 11th, 21st, 31st page...
 
 const App = () => {
   const [totalRecordsCount, setTotalRecordsCount] = useState<number>(-1);
   const [searchedResults, setSearchedResults] = useState<SearchData[]>([]);
-  // const [displayedResults, setDisplayedResults] = useState<SearchData[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<Filter>("all");
   const [currentFilter, setCurrentFilter] = useState<Filter>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -23,11 +22,55 @@ const App = () => {
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const displayedResults = useMemo(() => {
+  const displayedResults: SearchData[] = useMemo(() => {
     const startIdx = (currentPage - 1) * itemsPerPage;
     const endIdx = currentPage * itemsPerPage;
     return searchedResults.slice(startIdx, endIdx);
   }, [currentPage, searchedResults]);
+
+  const fetchSearchResults = useCallback(
+    async ({
+      query,
+      filter,
+      offset = 0,
+      append = false,
+    }: {
+      query: string;
+      filter: string;
+      offset?: number;
+      append?: boolean;
+    }) => {
+      setIsFetching(true);
+      const apiUrl = import.meta.env.VITE_DEVELOPMENT_SERVER_URL;
+
+      try {
+        const response = await fetch(
+          `${apiUrl}/search?q=${query}&filter=${filter}&limit=${fetchLimit}&offset=${offset}`
+        );
+
+        const { data, error } = await response.json();
+        if (error) throw new Error(error);
+
+        const { results, totalRecords } = data;
+
+        if (append) {
+          setSearchedResults((prev) => [...prev, ...results]);
+        } else {
+          setSearchedResults(results);
+          setTotalRecordsCount(totalRecords);
+        }
+      } catch (e: unknown) {
+        setTotalRecordsCount(-1);
+        setSearchedResults([]);
+        setErrorMessage(
+          e instanceof Error ? e.message : "Failed to retrieve data."
+        );
+      } finally {
+        setIsFetching(false);
+      }
+    },
+    []
+  );
 
   const searchAction = async (formData: FormData) => {
     const query = formData?.get("query") as string;
@@ -38,33 +81,11 @@ const App = () => {
       return;
     }
 
-    setErrorMessage("");
     setCurrentQueryText(query);
     setCurrentFilter(filter);
     setCurrentPage(1);
-    setIsFetching(true);
 
-    const apiUrl = import.meta.env.VITE_DEVELOPMENT_SERVER_URL;
-    try {
-      const response = await fetch(
-        `${apiUrl}/search?q=${query}&filter=${filter}&limit=${fetchLimit}`
-      );
-      const { data, error } = await response.json();
-      if (error) {
-        throw new Error(error);
-      }
-      const { totalRecords, results } = data;
-      setTotalRecordsCount(totalRecords);
-      setSearchedResults(results);
-    } catch (e: unknown) {
-      setTotalRecordsCount(-1);
-      setSearchedResults([]);
-      setErrorMessage(
-        e instanceof Error ? e.message : "Failed to retrieve data."
-      );
-    } finally {
-      setIsFetching(false);
-    }
+    fetchSearchResults({ query, filter });
   };
 
   const radioButtonHandler = (e: ChangeEvent<HTMLInputElement>) => {
@@ -77,31 +98,12 @@ const App = () => {
     const offset = (currentPage - 1) * itemsPerPage;
     if (offset <= searchedResults.length - 1) return;
 
-    const fetchPaginatedData = async () => {
-      setIsFetching(true);
-      const apiUrl = import.meta.env.VITE_DEVELOPMENT_SERVER_URL;
-      try {
-        const response = await fetch(
-          `${apiUrl}/search?q=${currentQueryText}&filter=${currentFilter}&limit=${fetchLimit}&offset=${offset}`
-        );
-        const { data, error } = await response.json();
-        if (error) {
-          throw new Error(error);
-        }
-        const { results } = data;
-        const newResults = [...searchedResults, ...results];
-        setSearchedResults(newResults);
-      } catch (e: unknown) {
-        setTotalRecordsCount(-1);
-        setSearchedResults([]);
-        setErrorMessage(
-          e instanceof Error ? e.message : "Failed to retrieve data."
-        );
-      } finally {
-        setIsFetching(false);
-      }
-    };
-    fetchPaginatedData();
+    fetchSearchResults({
+      query: currentQueryText,
+      filter: currentFilter,
+      offset,
+      append: true,
+    });
   }, [currentPage]);
 
   return (
@@ -170,7 +172,6 @@ const App = () => {
             })}
           </div>
         )}
-
         {totalRecordsCount !== -1 && (
           <Pagination
             currentPage={currentPage}
