@@ -32,7 +32,7 @@ const ResultItem = ({ data }: Params) => {
       {schema === "Person" ? <User /> : <Building />}
       <div>
         <h3 className="font-semibold text-lg">{name}</h3>
-        <div className="flex text-sm gap-3">
+        <div className="flex-1 lg:flex text-sm gap-3">
           <ResultItemProperty label="ID" value={id} />
           <ResultItemProperty label="Schema" value={schema} />
         </div>
