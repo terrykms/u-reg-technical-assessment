@@ -1,10 +1,14 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
+
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 const apiKey = process.env.OPENSANCTIONS_API_KEY;
+
+app.use(cors());
 
 app.get("/search", async (req, res) => {
   const { q, filter, page, limit } = req.query;
