@@ -67,4 +67,4 @@ cd ../client && npm run dev
 The app should now be running at:
 
 - Frontend → http://localhost:5173
-- Backend API → http://localhost:3000
+- Backend → http://localhost:3000

@@ -84,6 +84,7 @@ const App = () => {
     setCurrentQueryText(query);
     setCurrentFilter(filter);
     setCurrentPage(1);
+    setErrorMessage("");
 
     fetchSearchResults({ query, filter });
   };
@@ -97,7 +98,7 @@ const App = () => {
 
     const offset = (currentPage - 1) * itemsPerPage;
     if (offset <= searchedResults.length - 1) return;
-
+    setErrorMessage("");
     fetchSearchResults({
       query: currentQueryText,
       filter: currentFilter,
