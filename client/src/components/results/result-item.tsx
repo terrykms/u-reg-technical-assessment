@@ -2,11 +2,7 @@ import { Building, User } from "lucide-react";
 import ResultItemProperty from "./result-item-property";
 import { SearchData } from "../../types/search-result";
 
-type Params = {
-  data: SearchData;
-};
-
-const ResultItem = ({ data }: Params) => {
+const ResultItem = ({ data }: { data: SearchData }) => {
   const {
     id,
     schema,

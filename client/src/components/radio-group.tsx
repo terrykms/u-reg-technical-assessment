@@ -2,14 +2,14 @@ import { ChangeEvent } from "react";
 
 type Filter = "all" | "individuals" | "entities";
 
-type Params = {
+type RadioGroupProps = {
   groupLabel: string;
   options?: { value: Filter; label: string }[];
   selectedValue: Filter | string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 };
 
-const defaultOptions: Params["options"] = [
+const defaultOptions: RadioGroupProps["options"] = [
   {
     value: "all",
     label: "All",
@@ -29,7 +29,7 @@ const RadioGroup = ({
   options = defaultOptions,
   selectedValue,
   onChange,
-}: Params) => {
+}: RadioGroupProps) => {
   return (
     <div className="flex gap-2 items-center">
       {groupLabel}
